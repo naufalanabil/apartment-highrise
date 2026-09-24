@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum UnitType {
+  STUDIO
+  ONE_BEDROOM
+  TWO_BEDROOM
+  PENTHOUSE
+}
+
+enum UnitStatus {
+  AVAILABLE
+  RESERVED
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum DurationType {
+  DAILY_1
+  DAILY_3
+  WEEKLY_1
+  MONTHLY_1
+  YEARLY_1
+}
+
+enum PaymentMethod {
+  QRIS
+  VIRTUAL_ACCOUNT
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  EXPIRED
+}
+
+model User {
+  id                 String              @id @default(uuid())
+  name               String
+  email              String              @unique
+  phone              String
+  role               Role                @default(USER)
+  bookings           Booking[]
+  facilityBookings   FacilityBooking[]
+  maintenanceTickets MaintenanceTicket[]
+  createdAt          DateTime            @default(now())
+}
+
+model Unit {
+  id            String     @id @default(uuid())
+  unitNumber    String     @unique
+  floor         Int
+  positionIndex Int
+  type          UnitType
+  status        UnitStatus @default(AVAILABLE)
+  facing        String
+  baseDailyRate Float
+  bookings      Booking[]
+}
+
+model Booking {
+  id            String        @id @default(uuid())
+  bookingCode   String        @unique
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  unitId        String
+  unit          Unit          @relation(fields: [unitId], references: [id])
+  durationType  DurationType
+  startDate     DateTime
+  endDate       DateTime
+  totalAmount   Float
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  payment       Payment?
+  accessKey     AccessKey?
+  createdAt     DateTime      @default(now())
+}
+
+model Payment {
+  id            String        @id @default(uuid())
+  bookingId     String        @unique
+  booking       Booking       @relation(fields: [bookingId], references: [id])
+  transactionId String?
+  qrCodeUrl     String?
+  vaNumber      String?
+  bankName      String?
+  status        PaymentStatus @default(PENDING)
+  paidAt        DateTime?
+}
+
+model AccessKey {
+  id         String   @id @default(uuid())
+  bookingId  String   @unique
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  accessPin  String
+  qrAccess   String
+  validFrom  DateTime
+  validUntil DateTime
+  isActive   Boolean  @default(true)
+}
+
+model FacilityBooking {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  facilityName String
+  timeSlot     String
+  bookingDate  DateTime
+  createdAt    DateTime @default(now())
+}
+
+model MaintenanceTicket {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  unitNumber  String
+  category    String
+  description String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+}
