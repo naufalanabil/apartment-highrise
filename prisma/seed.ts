@@ -1,30 +1,34 @@
-import { PrismaClient, UnitType, UnitStatus } from "@prisma/client";
+import {
+  Prisma,
+  PrismaClient,
+  UnitStatus,
+  UnitType,
+} from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Menyimpan data 1.500 unit ke Neon Tech PostgreSQL...");
-  const unitsData = [];
+  const unitsData: Prisma.UnitCreateManyInput[] = [];
 
   for (let floor = 1; floor <= 50; floor++) {
-    const totalUnits = floor === 50 ? 10 : 30;
+    const totalUnits = 30;
 
     for (let pos = 1; pos <= totalUnits; pos++) {
-      const formattedPos = pos < 10 ? `0${pos}` : `${pos}`;
+      const formattedPos = String(pos).padStart(2, "0");
       const unitNumber = `${floor}${formattedPos}`;
 
-      let type = UnitType.STUDIO;
-      let baseRate = 350000;
+      let type: UnitType = UnitType.STUDIO;
+      let baseRate = 350_000;
 
       if (floor === 50) {
         type = UnitType.PENTHOUSE;
-        baseRate = 2500000;
+        baseRate = 2_500_000;
       } else if (pos % 5 === 0) {
         type = UnitType.TWO_BEDROOM;
-        baseRate = 750000;
+        baseRate = 750_000;
       } else if (pos % 3 === 0) {
         type = UnitType.ONE_BEDROOM;
-        baseRate = 500000;
+        baseRate = 500_000;
       }
 
       unitsData.push({
@@ -34,19 +38,26 @@ async function main() {
         type,
         status: UnitStatus.AVAILABLE,
         facing: pos <= 15 ? "North (City View)" : "South (Pool View)",
-        baseDailyRate: baseRate + floor * 5000,
+        baseDailyRate: baseRate + floor * 5_000,
       });
     }
   }
 
-  await prisma.unit.createMany({
+  const result = await prisma.unit.createMany({
     data: unitsData,
     skipDuplicates: true,
   });
 
-  console.log("Seeding selesai! 1.500 unit berhasil disimpan di Cloud Neon Tech.");
+  console.log(
+    `Seeding selesai: ${result.count} unit baru ditambahkan dari ${unitsData.length} unit.`,
+  );
 }
 
 main()
-  .catch((e) => console.error(e))
-  .finally(async () => await prisma.$disconnect());
+  .catch((error: unknown) => {
+    console.error("Seeding gagal:", error);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
