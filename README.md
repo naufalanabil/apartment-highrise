@@ -28,3 +28,31 @@ Make sure you have Node.js and npm installed:
    ```bash
    git clone [https://github.com/naufalanabil/apartment-highrise.git](https://github.com/naufalanabil/apartment-highrise.git)
    cd apartment-highrise
+
+   Install dependencies:
+
+npm install
+Set up Environment Variables:
+Buat file .env di folder utama (root) proyek kamu, lalu tambahkan konfigurasi database:
+
+DATABASE_URL="postgresql://username:password@localhost:5432/apartment_db"
+Setup Database with Prisma:
+
+npx prisma db push
+Run the Development Server:
+
+npm run dev
+Buka http://localhost:3000 di browser untuk melihat hasilnya.
+
+📂 Project Structure
+
+apartment-highrise/
+├── prisma/           # Database schema & migrations
+├── public/           # Static assets (images, icons)
+├── src/              # Source code (components, pages, styles)
+├── .env              # Environment variables
+├── package.json      # Dependencies and scripts
+└── README.md         # Project documentation
+
+📝 License
+This project is open-source and available under the MIT License.
